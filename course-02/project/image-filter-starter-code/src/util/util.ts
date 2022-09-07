@@ -1,4 +1,5 @@
 import fs from "fs";
+import { url } from "inspector";
 import Jimp = require("jimp");
 
 // filterImageFromURL
@@ -22,7 +23,7 @@ export async function filterImageFromURL(inputURL: string): Promise<string> {
           resolve(__dirname + outpath);
         });
     } catch (error) {
-      reject(error);
+        reject(error);
       
     }
   });

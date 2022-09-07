@@ -1,6 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
+import { nextTick } from 'process';
 
 
 (async () => {
@@ -30,19 +31,37 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
   /**************************************************************************** */
 
-  app.get("/filteredimage/",async (req, res) => {
-    let url = req.query;
+  app.get("/filteredimage/",async (req, res, next) => {
+    try{
+      let url = req.query;
+      
+      if(!url)
+      {
+        return res.status(400).send("Please enter a valid image url");
+      }
+      else
+      {
+        var pattern = new RegExp('^https?:.*\.(jpg|jpeg|png|webp|avif|gif|svg)');
+        if(pattern.test(req.query.url))
+        {
+          let filteredimage : string = await filterImageFromURL(req.query.url) as string;
     
-    if(!url)
+          res.status(200);
+          res.sendFile(filteredimage);
+          res.on('finish', () => deleteLocalFiles([filteredimage]));
+          
+        }
+        else
+        {
+          return res.status(400).send("Please enter a valid image url");
+        }
+      }
+    }
+    catch(err)
     {
-      return res.status(400).send("Please enter a valid image url");
+      return res.status(400).send("Failed to apply filters, try again later");;
     }
     
-    let filteredimage = await filterImageFromURL(url);
-    
-    res.status(200);
-    res.sendFile(filteredimage);
-    res.on('finish', () => deleteLocalFiles([filteredimage]));
   });
 
   //! END @TODO1
